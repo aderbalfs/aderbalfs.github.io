@@ -1,90 +1,313 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Geoportal 3D Mapas - Protótipo</title>
-    <link rel="stylesheet" href="/leaflet/leaflet.css" />
-    <script src="leaflet/leaflet.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <style>
-      body,
-      html {
-        margin: 0;
-        height: 100%;
-        font-family: Arial, sans-serif;
-      }
-      #sidebar {
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 250px;
-        background: #2ecc71; /* Verde predominante */
-        color: white;
-        padding: 20px;
-        box-sizing: border-box;
-      }
-      #sidebar h1 {
-        font-size: 20px;
-        margin: 0 0 10px 0;
-        color: #fff000; /* Amarelo destaque */
-      }
-      #map {
-        position: absolute;
-        left: 250px;
-        right: 0;
-        top: 0;
-        bottom: 0;
-      }
-      button {
-        display: block;
-        margin: 10px 0;
-        padding: 8px;
-        width: 100%;
-        background: #e74c3c; /* vermelho destaque */
-        color: white;
-        border: none;
-        cursor: pointer;
-      }
-      button:hover {
-        opacity: 0.9;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="sidebar">
-      <h1>3D Mapas</h1>
-      <p>Protótipo Geoportal</p>
-      <button>Camada 1</button>
-      <button>Camada 2</button>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Geoportal 3D Mapas — Protótipo</title>
+
+<!-- Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- Fullscreen (plugin) -->
+<link rel="stylesheet" href="https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css" />
+<script src="https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js"></script>
+
+<style>
+  :root{
+    --verde:#2ecc71;      /* cor principal */
+    --vermelho:#e74c3c;   /* destaque/botões */
+    --amarelo:#ffeb3b;    /* título/realce */
+  }
+  html,body{height:100%;margin:0;font-family:system-ui,Arial,sans-serif;}
+  #app{height:100%;display:flex;}
+  /* Barra lateral (fixa à esquerda) */
+  .sidebar{
+    width:300px;min-width:260px;background:var(--verde);color:#fff;padding:16px;box-sizing:border-box;
+    display:flex;flex-direction:column;gap:12px;
+  }
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand .dot{width:14px;height:14px;border-radius:50%;background:var(--amarelo)}
+  .brand h1{font-size:18px;margin:0;color:var(--amarelo);letter-spacing:.5px}
+  .panel{background:rgba(255,255,255,.12);border-radius:12px;padding:12px}
+  .panel h2{margin:0 0 8px 0;font-size:14px;color:#fff}
+  label{font-size:12px;display:block;margin:8px 0 4px}
+  select, input, button{
+    width:100%;padding:8px;border-radius:8px;border:0;box-sizing:border-box;
+  }
+  select,input{background:#fff;color:#333}
+  .btn{
+    background:var(--vermelho);color:#fff;cursor:pointer;font-weight:600;margin-top:8px;
+  }
+  .btn:disabled{opacity:.6;cursor:not-allowed}
+  .hint{font-size:12px;opacity:.9}
+  /* Mapa ocupa o restante */
+  #map{flex:1;position:relative}
+  /* Controle de camadas (Leaflet) não chocar com sidebar */
+  .leaflet-control-container .leaflet-top.leaflet-right{margin-right:8px}
+  .leaflet-control-container .leaflet-top.leaflet-left{margin-left:8px}
+  @media (max-width: 900px){
+    .sidebar{position:absolute;z-index:1000;height:auto;max-height:60vh;overflow:auto;box-shadow:0 8px 18px rgba(0,0,0,.25)}
+    #map{flex:1}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="dot"></div>
+      <h1>3D Mapas — Geoportal</h1>
     </div>
 
-    <div id="map"></div>
+    <div class="panel">
+      <h2>Camadas</h2>
+      <div class="hint">Use o controle no mapa (canto superior direito) para ligar/desligar as camadas.</div>
+    </div>
 
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script>
-      // Inicializa o mapa
-      var map = L.map("map").setView([-23.55052, -46.633308], 12); // exemplo São Paulo
+    <div class="panel">
+      <h2>Filtros</h2>
+      <label for="selArea">Área</label>
+      <select id="selArea"><option value="">Todas</option></select>
 
-      // Adiciona camada base OpenStreetMap
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "&copy; OpenStreetMap contributors",
-      }).addTo(map);
+      <label for="selACS">ACS (Microárea)</label>
+      <select id="selACS" disabled><option value="">Todas</option></select>
 
-      // Exemplo de JSON com pontos
-      var jsonData = [
-        { nome: "Ponto A", lat: -23.55052, lng: -46.633308 },
-        { nome: "Ponto B", lat: -23.557, lng: -46.64 },
-        { nome: "Ponto C", lat: -23.545, lng: -46.62 },
-      ];
+      <label for="selLog">Logradouro</label>
+      <select id="selLog" disabled><option value="">Todos</option></select>
 
-      // Adiciona marcadores ao mapa
-      jsonData.forEach(function (item) {
-        L.marker([item.lat, item.lng])
-          .addTo(map)
-          .bindPopup("<b>" + item.nome + "</b>");
-      });
-    </script>
-  </body>
+      <button id="btnFiltrar" class="btn">Aplicar filtro</button>
+      <button id="btnLimpar" class="btn" style="background:#333">Limpar filtro</button>
+      <div class="hint" style="margin-top:6px">As listas são preenchidas a partir dos dados.</div>
+    </div>
+
+    <div class="panel">
+      <h2>Visualização</h2>
+      <button id="btnFull" class="btn">Tela cheia</button>
+    </div>
+  </aside>
+
+  <div id="map"></div>
+</div>
+
+<script>
+/** CONFIG **/
+const DATA_URL = 'dados.json'; // coloque seu arquivo real aqui (mesma pasta do index.html)
+
+/** MAPA **/
+const map = L.map('map', { fullscreenControl: true }).setView([-9.649, -35.708], 13);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(map);
+
+/** LAYERS **/
+const areasLayer = L.geoJSON(null, {
+  style: { color:'#d32f2f', weight:2, fillOpacity:.15 } // vermelho
+}).addTo(map);
+
+const microareasLayer = L.geoJSON(null, {
+  style: { color:'#1976d2', weight:2, fillOpacity:.15 } // azul (contraste)
+}).addTo(map);
+
+L.control.layers(
+  {}, // base layers
+  { 'Área': areasLayer, 'Microárea (ACS)': microareasLayer },
+  { collapsed:false }
+).addTo(map);
+
+/** UI **/
+const selArea = document.getElementById('selArea');
+const selACS  = document.getElementById('selACS');
+const selLog  = document.getElementById('selLog');
+const btnFiltrar = document.getElementById('btnFiltrar');
+const btnLimpar  = document.getElementById('btnLimpar');
+const btnFull    = document.getElementById('btnFull');
+
+/** DADOS (fallback de exemplo, usado se não existir dados.json) **/
+const fallbackData = {
+  type:"FeatureCollection",
+  features:[
+    // Área 1 (polígono simples) + microáreas
+    {
+      type:"Feature",
+      properties:{ nivel:"area", area:"Área 1", acs:null, logradouro:"Rua A" },
+      geometry:{ type:"Polygon", coordinates:[[[-35.715,-9.655],[-35.695,-9.655],[-35.695,-9.64],[-35.715,-9.64],[-35.715,-9.655]]] }
+    },
+    {
+      type:"Feature",
+      properties:{ nivel:"microarea", area:"Área 1", acs:"ACS 01", logradouro:"Rua A" },
+      geometry:{ type:"Polygon", coordinates:[[[-35.712,-9.652],[-35.705,-9.652],[-35.705,-9.647],[-35.712,-9.647],[-35.712,-9.652]]] }
+    },
+    {
+      type:"Feature",
+      properties:{ nivel:"microarea", area:"Área 1", acs:"ACS 02", logradouro:"Rua B" },
+      geometry:{ type:"Polygon", coordinates:[[[-35.702,-9.652],[-35.697,-9.652],[-35.697,-9.647],[-35.702,-9.647],[-35.702,-9.652]]] }
+    },
+
+    // Área 2 + microáreas
+    {
+      type:"Feature",
+      properties:{ nivel:"area", area:"Área 2", acs:null, logradouro:"Av. Central" },
+      geometry:{ type:"Polygon", coordinates:[[[-35.705,-9.665],[-35.688,-9.665],[-35.688,-9.658],[-35.705,-9.658],[-35.705,-9.665]]] }
+    },
+    {
+      type:"Feature",
+      properties:{ nivel:"microarea", area:"Área 2", acs:"ACS 03", logradouro:"Av. Central" },
+      geometry:{ type:"Polygon", coordinates:[[[-35.703,-9.663],[-35.696,-9.663],[-35.696,-9.66],[-35.703,-9.66],[-35.703,-9.663]]] }
+    }
+  ]
+};
+
+/** ESTADO **/
+let fullData = null; // GeoJSON completo carregado
+let currentFilter = { area:'', acs:'', logradouro:'' };
+
+/** HELPERS UI **/
+function setOptions(select, values, placeholder){
+  const prev = select.value;
+  select.innerHTML = '';
+  const opt = document.createElement('option');
+  opt.value = '';
+  opt.textContent = placeholder;
+  select.appendChild(opt);
+  values.forEach(v=>{
+    const o = document.createElement('option');
+    o.value = v; o.textContent = v;
+    select.appendChild(o);
+  });
+  // restaura valor se ainda existir
+  if (values.includes(prev)) select.value = prev;
+}
+
+function uniqueSorted(arr){ return [...new Set(arr.filter(v=>v!==null && v!==undefined && v!==''))].sort((a,b)=>a.localeCompare(b,'pt-BR')); }
+
+/** CARREGAMENTO **/
+async function loadData(){
+  try{
+    const res = await fetch(DATA_URL, {cache:'no-store'});
+    if(!res.ok) throw new Error('Sem dados.json, usando exemplo.');
+    fullData = await res.json();
+  }catch(e){
+    console.warn(e.message);
+    fullData = fallbackData;
+  }
+  buildUIFromData(fullData);
+  applyFilterAndRender();
+}
+
+/** POPULAR SELECTS **/
+function buildUIFromData(geojson){
+  const feats = geojson.features || [];
+  const areas  = uniqueSorted(feats.map(f=>f.properties?.area));
+  const acs    = uniqueSorted(feats.map(f=>f.properties?.acs));
+  const logs   = uniqueSorted(feats.map(f=>f.properties?.logradouro));
+
+  setOptions(selArea, areas, 'Todas');
+  setOptions(selACS, acs, 'Todas');
+  setOptions(selLog, logs, 'Todos');
+
+  // Habilita selects
+  selACS.disabled = false;
+  selLog.disabled = false;
+}
+
+/** FILTRAGEM **/
+function filterFeatures(geojson, filter){
+  const feats = geojson.features || [];
+  return {
+    type:'FeatureCollection',
+    features: feats.filter(f=>{
+      const p = f.properties || {};
+      const okArea = !filter.area || p.area === filter.area;
+      const okAcs  = !filter.acs  || p.acs  === filter.acs;
+      const okLog  = !filter.logradouro || p.logradouro === filter.logradouro;
+      return okArea && okAcs && okLog;
+    })
+  };
+}
+
+/** RENDER **/
+function renderLayers(geojson){
+  areasLayer.clearLayers();
+  microareasLayer.clearLayers();
+
+  L.geoJSON(geojson, {
+    filter: f => f.properties?.nivel === 'area',
+    style: areasLayer.options.style,
+    onEachFeature: (feat, layer)=>{
+      const p = feat.properties || {};
+      layer.bindPopup(`<b>Área</b><br>Área: ${p.area ?? '-'}<br>Logradouro: ${p.logradouro ?? '-'}`);
+      areasLayer.addLayer(layer);
+    }
+  });
+
+  L.geoJSON(geojson, {
+    filter: f => f.properties?.nivel === 'microarea',
+    style: microareasLayer.options.style,
+    onEachFeature: (feat, layer)=>{
+      const p = feat.properties || {};
+      layer.bindPopup(`<b>Microárea (ACS)</b><br>Área: ${p.area ?? '-'}<br>ACS: ${p.acs ?? '-'}<br>Logradouro: ${p.logradouro ?? '-'}`);
+      microareasLayer.addLayer(layer);
+    }
+  });
+
+  // Ajusta o mapa para caber nas feições
+  const group = L.featureGroup([areasLayer, microareasLayer]);
+  try{
+    const b = group.getBounds();
+    if (b.isValid()) map.fitBounds(b.pad(0.1));
+  }catch(_){}
+}
+
+function applyFilterAndRender(){
+  const subset = filterFeatures(fullData, currentFilter);
+  renderLayers(subset);
+}
+
+/** EVENTOS **/
+btnFiltrar.addEventListener('click', ()=>{
+  currentFilter = {
+    area: selArea.value || '',
+    acs: selACS.value || '',
+    logradouro: selLog.value || ''
+  };
+  applyFilterAndRender();
+});
+
+btnLimpar.addEventListener('click', ()=>{
+  selArea.value = '';
+  selACS.value = '';
+  selLog.value = '';
+  currentFilter = { area:'', acs:'', logradouro:'' };
+  applyFilterAndRender();
+});
+
+btnFull.addEventListener('click', ()=>{
+  // atalho: se já estiver fullscreen, sai; senão entra.
+  if (map.isFullscreen()) map.toggleFullscreen(); else map.toggleFullscreen();
+});
+
+/** CASCATEAMENTO SIMPLES (opcional: filtrar listas com base na seleção anterior) **/
+selArea.addEventListener('change', ()=>{
+  const areaSel = selArea.value;
+  const feats = fullData.features || [];
+  const acs = uniqueSorted(feats.filter(f=>!areaSel || f.properties?.area===areaSel).map(f=>f.properties?.acs));
+  const logs = uniqueSorted(feats.filter(f=>!areaSel || f.properties?.area===areaSel).map(f=>f.properties?.logradouro));
+  setOptions(selACS, acs, 'Todas');
+  setOptions(selLog, logs, 'Todos');
+});
+
+selACS.addEventListener('change', ()=>{
+  const areaSel = selArea.value;
+  const acsSel  = selACS.value;
+  const feats = fullData.features || [];
+  const logs = uniqueSorted(
+    feats.filter(f=>(!areaSel || f.properties?.area===areaSel) && (!acsSel || f.properties?.acs===acsSel))
+         .map(f=>f.properties?.logradouro)
+  );
+  setOptions(selLog, logs, 'Todos');
+});
+
+/** START **/
+loadData();
+</script>
+</body>
 </html>
