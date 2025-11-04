@@ -30,7 +30,7 @@ O **Geoportal 3D Mapas** foi criado com foco em simplicidade, desempenho e escal
 🌐 Publicação no GitHub Pages
 
 O projeto pode ser visualizado publicamente no GitHub Pages:
-👉 https://aderbalfs.github.io/
+👉 https://aderbalfs.github.io/Geoportal3D.io/
 
 ---
 
