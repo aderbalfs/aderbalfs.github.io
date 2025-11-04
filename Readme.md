@@ -36,6 +36,6 @@ O projeto pode ser visualizado publicamente no GitHub Pages:
 
 👨‍💻 Autor
 
-Desenvolvido por Aderbal
-📍 Diretor de Tecnologia da Informação
-💬 “Simplicidade é a sofisticação suprema.”
+- Desenvolvido por Aderbal
+- 📍 Diretor de Tecnologia da Informação
+- 💬 “Simplicidade é a sofisticação suprema.”
