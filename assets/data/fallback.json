@@ -1,0 +1,110 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "nivel": "area",
+        "area": "Área 1",
+        "acs": null,
+        "logradouro": "Rua A"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-35.715, -9.655],
+            [-35.695, -9.655],
+            [-35.695, -9.64],
+            [-35.715, -9.64],
+            [-35.715, -9.655]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nivel": "microarea",
+        "area": "Área 1",
+        "acs": "ACS 01",
+        "logradouro": "Rua A"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-35.712, -9.652],
+            [-35.705, -9.652],
+            [-35.705, -9.647],
+            [-35.712, -9.647],
+            [-35.712, -9.652]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nivel": "microarea",
+        "area": "Área 1",
+        "acs": "ACS 02",
+        "logradouro": "Rua B"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-35.702, -9.652],
+            [-35.697, -9.652],
+            [-35.697, -9.647],
+            [-35.702, -9.647],
+            [-35.702, -9.652]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nivel": "area",
+        "area": "Área 2",
+        "acs": null,
+        "logradouro": "Av. Central"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-35.705, -9.665],
+            [-35.688, -9.665],
+            [-35.688, -9.658],
+            [-35.705, -9.658],
+            [-35.705, -9.665]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nivel": "microarea",
+        "area": "Área 2",
+        "acs": "ACS 03",
+        "logradouro": "Av. Central"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-35.703, -9.663],
+            [-35.696, -9.663],
+            [-35.696, -9.66],
+            [-35.703, -9.66],
+            [-35.703, -9.663]
+          ]
+        ]
+      }
+    }
+  ]
+}

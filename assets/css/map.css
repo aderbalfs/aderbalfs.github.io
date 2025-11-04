@@ -1,0 +1,11 @@
+#map {
+  flex: 1;
+  position: relative;
+}
+
+.leaflet-control-container .leaflet-top.leaflet-right {
+  margin-right: 8px;
+}
+.leaflet-control-container .leaflet-top.leaflet-left {
+  margin-left: 8px;
+}
