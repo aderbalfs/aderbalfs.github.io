@@ -1,6 +1,6 @@
 import { loadData, filterFeatures, extractLists } from "./data.js";
 import { setOptions } from "./utils.js";
-import { renderLayers } from "./map.js";
+import "./map.js";
 import { setupUI } from "./ui.js";
 
 let fullData = null;

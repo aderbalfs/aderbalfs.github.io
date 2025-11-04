@@ -1,65 +1,89 @@
-export const map = L.map("map", { fullscreenControl: true }).setView(
+// ===============================
+//  GEO PORTAL 3D MAPAS - MAP.JS
+// ===============================
+
+// === Inicialização do mapa ===
+const map = L.map("map", { fullscreenControl: true }).setView(
   [-9.649, -35.708],
   13
 );
 
+// === Camada base (OpenStreetMap) ===
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 19,
   attribution: "&copy; OpenStreetMap",
 }).addTo(map);
 
-export const areasLayer = L.geoJSON(null, {
+// === Camadas (Áreas e Microáreas) ===
+const areasLayer = L.geoJSON(null, {
   style: { color: "#d32f2f", weight: 2, fillOpacity: 0.15 },
 }).addTo(map);
 
-export const microareasLayer = L.geoJSON(null, {
+const microareasLayer = L.geoJSON(null, {
   style: { color: "#1976d2", weight: 2, fillOpacity: 0.15 },
 }).addTo(map);
 
-L.control
+// === Controle de camadas ===
+const layerControl = L.control
   .layers(
-    {},
-    {
-      Área: areasLayer,
-      "Microárea (ACS)": microareasLayer,
-    },
-    { collapsed: window.innerWidth < 900 }
+    { "Base OSM": map }, // base
+    { Áreas: areasLayer, Microáreas: microareasLayer },
+    { collapsed: false }
   )
   .addTo(map);
 
-export function renderLayers(geojson) {
-  areasLayer.clearLayers();
-  microareasLayer.clearLayers();
+// ============================
+//  CARREGAMENTO DA CIDADE
+// ============================
 
-  L.geoJSON(geojson, {
-    filter: (f) => f.properties?.nivel === "area",
-    style: areasLayer.options.style,
-    onEachFeature: (feat, layer) => {
-      const p = feat.properties || {};
-      layer.bindPopup(
-        `<b>Área</b><br>Área: ${p.area ?? "-"}<br>Logradouro: ${
-          p.logradouro ?? "-"
-        }`
-      );
-      areasLayer.addLayer(layer);
-    },
-  });
+async function carregarCidade() {
+  try {
+    console.log("📂 Carregando camada da cidade...");
+    const response = await fetch("assets/data/cidade.geojson", {
+      cache: "no-store",
+    });
+    if (!response.ok) throw new Error("Arquivo cidade.geojson não encontrado");
 
-  L.geoJSON(geojson, {
-    filter: (f) => f.properties?.nivel === "microarea",
-    style: microareasLayer.options.style,
-    onEachFeature: (feat, layer) => {
-      const p = feat.properties || {};
-      layer.bindPopup(
-        `<b>Microárea (ACS)</b><br>Área: ${p.area ?? "-"}<br>ACS: ${
-          p.acs ?? "-"
-        }<br>Logradouro: ${p.logradouro ?? "-"}`
-      );
-      microareasLayer.addLayer(layer);
-    },
-  });
+    const cidadeData = await response.json();
 
-  const group = L.featureGroup([areasLayer, microareasLayer]);
-  const bounds = group.getBounds();
-  if (bounds.isValid()) map.fitBounds(bounds.pad(0.1));
+    const cidadeLayer = L.geoJSON(cidadeData, {
+      style: (feature) => ({
+        color: feature.properties.stroke || "#ff0000",
+        weight: 2,
+        fillOpacity: feature.properties["fill-opacity"] || 0.1,
+        opacity: feature.properties["stroke-opacity"] || 1,
+      }),
+      onEachFeature: (feature, layer) => {
+        const p = feature.properties;
+        layer.bindPopup(`
+          <b>${p.name || "Área sem nome"}</b><br>
+          IBGE: ${p.IBGE_GEOCO || "-"}<br>
+          População: ${p.population || "-"}
+        `);
+      },
+    });
+
+    // Adiciona a camada ao mapa
+    cidadeLayer.addTo(map);
+
+    // Adiciona ao controle de camadas
+    layerControl.addOverlay(cidadeLayer, "Cidade - Itabaiana");
+
+    // Centraliza o mapa na cidade
+    map.fitBounds(cidadeLayer.getBounds());
+
+    console.log("✅ Camada da cidade carregada com sucesso!");
+  } catch (err) {
+    console.error("❌ Erro ao carregar a cidade:", err);
+  }
 }
+
+// Executa após o DOM e o mapa estarem prontos
+document.addEventListener("DOMContentLoaded", carregarCidade);
+
+// ============================
+//  Funções de controle extra
+// ============================
+
+// (Exemplo: fullscreen manual, recarregar dados, etc.)
+// Você pode adicionar aqui outras camadas e funções personalizadas
